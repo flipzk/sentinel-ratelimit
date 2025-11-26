@@ -1,6 +1,6 @@
-from fastapi import Request, HTTPException
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 
 from sentinel.core.strategies.base import RateLimitStrategy, RateLimitResult
 
@@ -24,9 +24,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         if result.result == RateLimitResult.DENIED:
             headers["Retry-After"] = str(int(result.retry_after or 1))
-            raise HTTPException(
+            return JSONResponse(
                 status_code=429,
-                detail={
+                content={
                     "error": "rate_limit_exceeded",
                     "message": "Too many requests",
                     "retry_after": result.retry_after,
