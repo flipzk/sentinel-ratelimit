@@ -25,10 +25,6 @@ from sentinel.core.strategies.base import RateLimitResult
 from sentinel.core.strategies.token_bucket import TokenBucketStrategy
 
 
-# =============================================================================
-# Fixtures
-# =============================================================================
-
 
 @pytest.fixture
 def backend() -> InMemoryBackend:
@@ -40,11 +36,6 @@ def backend() -> InMemoryBackend:
 def strategy(backend: InMemoryBackend) -> TokenBucketStrategy:
     """Create a Token Bucket strategy with the test backend."""
     return TokenBucketStrategy(backend)
-
-
-# =============================================================================
-# Basic Behavior Tests
-# =============================================================================
 
 
 class TestBasicBehavior:
@@ -92,11 +83,6 @@ class TestBasicBehavior:
 
         assert not result.is_allowed
         assert result.result == RateLimitResult.DENIED
-
-
-# =============================================================================
-# Token Tracking Tests
-# =============================================================================
 
 
 class TestTokenTracking:
@@ -149,11 +135,6 @@ class TestTokenTracking:
         result = await strategy.check(key, limit=limit, window_seconds=60)
 
         assert result.limit == limit
-
-
-# =============================================================================
-# Token Refill Tests
-# =============================================================================
 
 
 class TestTokenRefill:
@@ -224,13 +205,8 @@ class TestTokenRefill:
         assert not result.is_allowed
         assert result.retry_after is not None
         assert result.retry_after > 0
-        # Should be approximately 10 seconds (time for 1 token)
         assert result.retry_after <= window_seconds
 
-
-# =============================================================================
-# Key Isolation Tests
-# =============================================================================
 
 
 class TestKeyIsolation:
@@ -276,11 +252,6 @@ class TestKeyIsolation:
             # One more should be denied
             result = await strategy.check(key, limit=limit, window_seconds=60)
             assert not result.is_allowed
-
-
-# =============================================================================
-# Reset Tests
-# =============================================================================
 
 
 class TestReset:
@@ -342,11 +313,6 @@ class TestReset:
         # User Y should still be exhausted
         result_y = await strategy.check("user:Y", limit=limit, window_seconds=60)
         assert not result_y.is_allowed
-
-
-# =============================================================================
-# Edge Cases
-# =============================================================================
 
 
 class TestEdgeCases:

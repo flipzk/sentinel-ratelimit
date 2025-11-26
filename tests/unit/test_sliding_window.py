@@ -25,11 +25,6 @@ from sentinel.core.strategies.base import RateLimitResult
 from sentinel.core.strategies.sliding_window import SlidingWindowStrategy
 
 
-# =============================================================================
-# Fixtures
-# =============================================================================
-
-
 @pytest.fixture
 def backend() -> InMemoryBackend:
     """Create a fresh in-memory backend for each test."""
@@ -40,11 +35,6 @@ def backend() -> InMemoryBackend:
 def strategy(backend: InMemoryBackend) -> SlidingWindowStrategy:
     """Create a Sliding Window strategy with the test backend."""
     return SlidingWindowStrategy(backend)
-
-
-# =============================================================================
-# Basic Behavior Tests
-# =============================================================================
 
 
 class TestBasicBehavior:
@@ -93,12 +83,6 @@ class TestBasicBehavior:
         assert not result.is_allowed
         assert result.result == RateLimitResult.DENIED
 
-
-# =============================================================================
-# Request Counting Tests
-# =============================================================================
-
-
 class TestRequestCounting:
     """Tests for accurate request counting."""
 
@@ -127,7 +111,6 @@ class TestRequestCounting:
         limit = 2
         key = "user:5"
 
-        # Use all slots
         await strategy.check(key, limit=limit, window_seconds=60)
         await strategy.check(key, limit=limit, window_seconds=60)
 
@@ -171,11 +154,6 @@ class TestRequestCounting:
         assert result.remaining == 0
 
 
-# =============================================================================
-# Window Expiration Tests
-# =============================================================================
-
-
 class TestWindowExpiration:
     """Tests for window expiration behavior."""
 
@@ -186,14 +164,12 @@ class TestWindowExpiration:
     ) -> None:
         """After window expires, requests should be allowed again."""
         limit = 2
-        window_seconds = 1  # Short window for testing
+        window_seconds = 1  
         key = "user:7"
 
-        # Use all slots
         await strategy.check(key, limit=limit, window_seconds=window_seconds)
         await strategy.check(key, limit=limit, window_seconds=window_seconds)
 
-        # Should be denied
         result = await strategy.check(key, limit=limit, window_seconds=window_seconds)
         assert not result.is_allowed
 
@@ -256,7 +232,6 @@ class TestWindowExpiration:
         assert not result.is_allowed
         assert result.retry_after is not None
         assert result.retry_after > 0
-        # Should be approximately window_seconds (time until first request expires)
         assert result.retry_after <= window_seconds
 
     @pytest.mark.asyncio
@@ -272,25 +247,15 @@ class TestWindowExpiration:
         # Use the only slot
         await strategy.check(key, limit=limit, window_seconds=window_seconds)
 
-        # Get first retry_after
         result1 = await strategy.check(key, limit=limit, window_seconds=window_seconds)
         retry1 = result1.retry_after
 
-        # Wait a bit
         await asyncio.sleep(1.0)
 
-        # Get second retry_after
         result2 = await strategy.check(key, limit=limit, window_seconds=window_seconds)
         retry2 = result2.retry_after
 
-        # Second retry_after should be less than first
         assert retry2 < retry1
-
-
-# =============================================================================
-# Key Isolation Tests
-# =============================================================================
-
 
 class TestKeyIsolation:
     """Tests for isolation between different rate limit keys."""
@@ -303,15 +268,12 @@ class TestKeyIsolation:
         """Each key should have its own window."""
         limit = 2
 
-        # Use all slots for user A
         await strategy.check("user:A", limit=limit, window_seconds=60)
         await strategy.check("user:A", limit=limit, window_seconds=60)
 
-        # User A should be denied
         result_a = await strategy.check("user:A", limit=limit, window_seconds=60)
         assert not result_a.is_allowed
 
-        # User B should still have all slots
         result_b = await strategy.check("user:B", limit=limit, window_seconds=60)
         assert result_b.is_allowed
         assert result_b.remaining == limit - 1
@@ -337,11 +299,6 @@ class TestKeyIsolation:
             assert not result.is_allowed
 
 
-# =============================================================================
-# Reset Tests
-# =============================================================================
-
-
 class TestReset:
     """Tests for the reset functionality."""
 
@@ -354,18 +311,14 @@ class TestReset:
         limit = 3
         key = "user:reset"
 
-        # Use all slots
         for _ in range(limit):
             await strategy.check(key, limit=limit, window_seconds=60)
 
-        # Should be denied
         result = await strategy.check(key, limit=limit, window_seconds=60)
         assert not result.is_allowed
 
-        # Reset
         await strategy.reset(key)
 
-        # Should have all slots again
         result = await strategy.check(key, limit=limit, window_seconds=60)
         assert result.is_allowed
         assert result.remaining == limit - 1
@@ -376,7 +329,6 @@ class TestReset:
         strategy: SlidingWindowStrategy,
     ) -> None:
         """Resetting a key that doesn't exist should not raise."""
-        # Should not raise
         await strategy.reset("nonexistent:key")
 
     @pytest.mark.asyncio
@@ -387,29 +339,21 @@ class TestReset:
         """Reset should not affect other keys."""
         limit = 2
 
-        # Use all slots for both users
         await strategy.check("user:X", limit=limit, window_seconds=60)
         await strategy.check("user:X", limit=limit, window_seconds=60)
 
         await strategy.check("user:Y", limit=limit, window_seconds=60)
         await strategy.check("user:Y", limit=limit, window_seconds=60)
 
-        # Reset only user X
         await strategy.reset("user:X")
 
-        # User X should have full capacity
         result_x = await strategy.check("user:X", limit=limit, window_seconds=60)
         assert result_x.is_allowed
         assert result_x.remaining == limit - 1
 
-        # User Y should still be at limit
         result_y = await strategy.check("user:Y", limit=limit, window_seconds=60)
         assert not result_y.is_allowed
 
-
-# =============================================================================
-# Edge Cases
-# =============================================================================
 
 
 class TestEdgeCases:
@@ -526,9 +470,6 @@ class TestEdgeCases:
         assert results[limit:] == [False] * 2
 
 
-# =============================================================================
-# Comparison with Token Bucket Behavior
-# =============================================================================
 
 
 class TestSlidingWindowSpecificBehavior:
@@ -571,13 +512,11 @@ class TestSlidingWindowSpecificBehavior:
         limit = 10
         key = "user:strict"
 
-        # Make exactly 'limit' requests
         for i in range(limit):
             result = await strategy.check(key, limit=limit, window_seconds=60)
             assert result.is_allowed, f"Request {i + 1} should be allowed"
             assert result.remaining == limit - i - 1
 
-        # Request limit + 1 must be denied
         result = await strategy.check(key, limit=limit, window_seconds=60)
         assert not result.is_allowed
         assert result.remaining == 0
