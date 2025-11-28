@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.github/
+tests/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+coverage.xml
+.env
+*.md
+Dockerfile
+docker-compose.yml
