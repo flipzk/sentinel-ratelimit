@@ -1,6 +1,9 @@
 import pytest
 from unittest.mock import AsyncMock
-from sentinel.core.strategies.token_bucket import TokenBucketStrategy, RateLimitStatus
+# Importa a estratégia do ficheiro token_bucket
+from sentinel.core.strategies.token_bucket import TokenBucketStrategy
+# Importa o Status do ficheiro base (Mais seguro)
+from sentinel.core.strategies.base import RateLimitStatus
 
 @pytest.fixture
 def mock_backend():

@@ -18,4 +18,4 @@ class RateLimitStrategy(ABC):
     @abstractmethod
     async def check(self, key: str, limit: int, window: int) -> RateLimitResult:
         """Atomically checks if request is allowed."""
-        ...
+        pass
