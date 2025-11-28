@@ -164,7 +164,7 @@ class TestWindowExpiration:
     ) -> None:
         """After window expires, requests should be allowed again."""
         limit = 2
-        window_seconds = 1  
+        window_seconds = 1
         key = "user:7"
 
         await strategy.check(key, limit=limit, window_seconds=window_seconds)
@@ -471,7 +471,6 @@ class TestEdgeCases:
 
 
 
-
 class TestSlidingWindowSpecificBehavior:
     """Tests that highlight Sliding Window's unique characteristics."""
 
@@ -482,7 +481,6 @@ class TestSlidingWindowSpecificBehavior:
     ) -> None:
         """
         Sliding Window should NOT allow bursts beyond limit.
-        
         Unlike Token Bucket, even if you wait, you can't
         accumulate extra capacity beyond the limit.
         """

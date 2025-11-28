@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 
-from sentinel.config import settings, StrategyType
-from sentinel.core.backends.memory import InMemoryBackend
-from sentinel.core.strategies.token_bucket import TokenBucketStrategy
-from sentinel.core.strategies.sliding_window import SlidingWindowStrategy
 from sentinel.api.middleware import RateLimitMiddleware
 from sentinel.api.routes import router
+from sentinel.config import StrategyType, settings
+from sentinel.core.backends.memory import InMemoryBackend
+from sentinel.core.strategies.sliding_window import SlidingWindowStrategy
+from sentinel.core.strategies.token_bucket import TokenBucketStrategy
 
 
 def create_app() -> FastAPI:

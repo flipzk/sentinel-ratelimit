@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 from sentinel.config import settings
 
-
 router = APIRouter()
 
 

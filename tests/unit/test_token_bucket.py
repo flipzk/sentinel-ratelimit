@@ -25,7 +25,6 @@ from sentinel.core.strategies.base import RateLimitResult
 from sentinel.core.strategies.token_bucket import TokenBucketStrategy
 
 
-
 @pytest.fixture
 def backend() -> InMemoryBackend:
     """Create a fresh in-memory backend for each test."""

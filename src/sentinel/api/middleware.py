@@ -1,8 +1,8 @@
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response, JSONResponse
+from starlette.responses import JSONResponse, Response
 
-from sentinel.core.strategies.base import RateLimitStrategy, RateLimitResult
+from sentinel.core.strategies.base import RateLimitResult, RateLimitStrategy
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
