@@ -37,7 +37,7 @@ async def root():
 async def test_endpoint(request: Request):
     return {
         "message": "Request allowed",
-        "client": request.headers.get("X-API-Key", request.client.host),
+        "client": request.headers.get("X-API-Key", request.client.host if request.client else "unknown"),
         "rate_limit": {
             "limit": request.headers.get("X-RateLimit-Limit"),
             "remaining": request.headers.get("X-RateLimit-Remaining"),

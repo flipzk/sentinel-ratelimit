@@ -167,7 +167,8 @@ class TokenBucketStrategy(RateLimitStrategy):
         storage_key = f"{self.KEY_PREFIX}:{key}"
         await self._backend.delete(storage_key)
 
-    async def _get_state(self, storage_key: str) -> dict | None:
+    from typing import Dict, Any
+async def _get_state(self, storage_key: str) -> dict[str, float] | None:  # or use Dict[str, float] | None
         """
         Retrieve bucket state from storage.
 
