@@ -1,9 +1,12 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse
+import structlog
 
 from sentinel.core.strategies.base import RateLimitStrategy, RateLimitStatus
 from sentinel.core.quota import QuotaManager
+
+logger = structlog.get_logger()
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(
@@ -17,22 +20,34 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.quota_manager = quota_manager
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        # 1. Identify Client
         api_key = request.headers.get("X-API-Key")
-        client_id = f"api:{api_key}" if api_key else f"ip:{request.client.host}"
+        client_ip = request.client.host if request.client else "unknown"
+        client_id = f"api:{api_key}" if api_key else f"ip:{client_ip}"
         
-        # 2. DYNAMIC STEP: Get quota based on client identity
-        # The limit is no longer hardcoded!
+        # Contextual Logging
+        structlog.contextvars.clear_contextvars()
+        structlog.contextvars.bind_contextvars(
+            client_id=client_id,
+            path=request.url.path,
+            method=request.method
+        )
+
         quota = self.quota_manager.get_quota(api_key)
-        
-        # 3. Check Rate Limit using the dynamic quota
         result = await self.strategy.check(client_id, quota.limit, quota.window)
+
+        logger.info(
+            "rate_limit_check",
+            status=result.status,
+            remaining=result.remaining,
+            limit=quota.limit,
+            tier=self.quota_manager._resolve_tier(api_key)
+        )
 
         headers = {
             "X-RateLimit-Limit": str(result.limit),
             "X-RateLimit-Remaining": str(result.remaining),
             "X-RateLimit-Reset": str(int(result.reset_at)),
-            "X-User-Tier": self.quota_manager._resolve_tier(api_key), # Just for debugging
+            "X-User-Tier": self.quota_manager._resolve_tier(api_key),
         }
 
         if result.status == RateLimitStatus.DENIED:
