@@ -1,7 +1,7 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse
-import structlog
+import structlog # type: ignore
 
 from sentinel.core.strategies.base import RateLimitStrategy, RateLimitStatus
 from sentinel.core.quota import QuotaManager
