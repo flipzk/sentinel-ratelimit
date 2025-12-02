@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         window=settings.rate_limit_window
     )
     
-    print(f"🚀 Sentinel started. Strategy: {settings.rate_limit_strategy}")
+    print(f" Sentinel started. Strategy: {settings.rate_limit_strategy}")
     yield
     
     # 4. Cleanup
