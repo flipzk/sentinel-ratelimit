@@ -1,37 +1,57 @@
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
-from sentinel.config import settings, StrategyType
-from sentinel.core.backends.memory import InMemoryBackend
-from sentinel.core.strategies.token_bucket import TokenBucketStrategy
-from sentinel.core.strategies.sliding_window import SlidingWindowStrategy
+from fastapi import FastAPI
+from redis.asyncio import from_url
+
+from sentinel.config import settings
 from sentinel.api.middleware import RateLimitMiddleware
 from sentinel.api.routes import router
+from sentinel.core.storage.redis import RedisBackend
+from sentinel.core.strategies.token_bucket import TokenBucketStrategy
 
+# Global resource container for cleanup
+resources = {}
 
-def create_app() -> FastAPI:
-    app = FastAPI(
-        title=settings.app_name,
-        description="Adaptive rate limiting for APIs",
-        version="0.1.0",
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """
+    Application lifecycle manager.
+    Handles Redis connection startup and graceful shutdown.
+    """
+    # 1. Initialize Infrastructure
+    redis_client = from_url(
+        settings.redis_url, 
+        encoding="utf-8", 
+        decode_responses=True
     )
-
-    backend = InMemoryBackend()
-
-    if settings.rate_limit_strategy == StrategyType.TOKEN_BUCKET:
-        strategy = TokenBucketStrategy(backend)
-    else:
-        strategy = SlidingWindowStrategy(backend)
-
+    
+    # 2. Initialize Core Logic (Dependency Injection)
+    backend = RedisBackend(redis_client)
+    strategy = TokenBucketStrategy(backend)
+    
+    # Store reference to close later
+    resources["redis"] = redis_client
+    
+    # 3. Inject Middleware
+    # We add it here to ensure 'strategy' is fully initialized
     app.add_middleware(
         RateLimitMiddleware,
         strategy=strategy,
         limit=settings.rate_limit_default,
-        window=settings.rate_limit_window,
+        window=settings.rate_limit_window
     )
+    
+    print(f"🚀 Sentinel started. Strategy: {settings.rate_limit_strategy}")
+    yield
+    
+    # 4. Cleanup
+    await redis_client.close()
+    print(" Sentinel stopped")
 
-    app.include_router(router)
+app = FastAPI(
+    title=settings.app_name,
+    lifespan=lifespan
+)
 
-    return app
-
-
-app = create_app()
+app.include_router(router)
