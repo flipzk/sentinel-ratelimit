@@ -3,10 +3,11 @@ name = "sentinel"
 version = "0.1.0"
 description = "Adaptive rate limiting for financial APIs"
 readme = "README.md"
-license = { text = "MIT" }
+# CORREÇÃO 1: Sintaxe moderna para evitar erro do setuptools
+license = "MIT"
 requires-python = ">=3.11"
 authors = [
-    { name = "Your Name", email = "your.email@example.com" }
+    { name = "Filipa", email = "filipa@example.com" }
 ]
 keywords = [
     "rate-limiting",
@@ -19,7 +20,7 @@ keywords = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    # "License :: ..." removido porque já definimos 'license = "MIT"' acima
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -45,6 +46,7 @@ dev = [
     "ruff>=0.3.0",
     "mypy>=1.8.0",
     "pre-commit>=3.6.0",
+    "types-redis>=4.6.0", # ADICIONADO: Para tipagem correta do Redis
 ]
 
 [project.urls]
@@ -61,7 +63,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 sentinel = ["py.typed"]
-
 
 [tool.ruff]
 target-version = "py311"
@@ -88,7 +89,6 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["sentinel"]
 
-
 [tool.mypy]
 python_version = "3.11"
 strict = true
@@ -104,14 +104,14 @@ warn_unused_configs = true
 show_error_codes = true
 files = ["src/sentinel"]
 
-[[tool.mypy.overrides]]
-module = ["redis.*"]
-ignore_missing_imports = true
-
+# CORREÇÃO 3: Removi o ignore do Redis porque adicionámos 'types-redis' acima.
+# O código fica mais seguro assim.
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# CORREÇÃO 2: Ajuda o pytest a encontrar o código na pasta src
+pythonpath = ["src"] 
 addopts = [
     "-v",
     "--strict-markers",
