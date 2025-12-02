@@ -11,6 +11,5 @@ tests/
 .coverage
 coverage.xml
 .env
-*.md
 Dockerfile
 docker-compose.yml

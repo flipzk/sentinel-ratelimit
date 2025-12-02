@@ -1,5 +1,5 @@
-from enum import StrEnum
 from functools import lru_cache
+from enum import StrEnum
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class StrategyType(StrEnum):
@@ -8,7 +8,7 @@ class StrategyType(StrEnum):
 
 class Settings(BaseSettings):
     app_name: str = "Sentinel API"
-    redis_url: str
+    redis_url: str = "redis://redis:6379/0" 
     rate_limit_strategy: StrategyType = StrategyType.TOKEN_BUCKET
     rate_limit_default: int = 100
     rate_limit_window: int = 60
@@ -18,3 +18,5 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+settings = get_settings()
